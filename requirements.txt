@@ -1,0 +1,6 @@
+aiohttp==3.13.3
+dashscope==1.25.7
+openpyxl==3.1.5
+PyYAML==6.0.3
+pyyaml
+rich

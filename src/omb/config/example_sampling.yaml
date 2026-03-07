@@ -1,0 +1,36 @@
+# Example configuration with sampling parameters enabled
+# Copy this to your custom config file and adjust values as needed
+
+# Sampling Parameters Examples:
+
+# Example 1: Conservative sampling (more focused, deterministic)
+TEMPERATURE: 0.3
+TOP_P: 0.9
+TOP_K: 40
+FREQUENCY_PENALTY: 0.5
+PRESENCE_PENALTY: 0.5
+
+# Example 2: Creative sampling (more diverse, exploratory)
+# TEMPERATURE: 0.9
+# TOP_P: 0.95
+# TOP_K: null
+# FREQUENCY_PENALTY: 0.0
+# PRESENCE_PENALTY: 0.0
+
+# Example 3: Balanced sampling (default recommended)
+# TEMPERATURE: 0.7
+# TOP_P: 0.9
+# TOP_K: null
+# FREQUENCY_PENALTY: 0.0
+# PRESENCE_PENALTY: 0.0
+
+# Parameter Descriptions:
+# - TEMPERATURE: Controls randomness (0.0-2.0). Lower = more focused, higher = more creative
+# - TOP_P: Nucleus sampling (0.0-1.0). Only consider tokens with cumulative probability >= top_p
+# - TOP_K: Top-k sampling (integer). Only consider top K most likely tokens
+# - MIN_P: Minimum probability threshold (0.0-1.0). Filter out tokens below this probability
+# - FREQUENCY_PENALTY: Penalize tokens based on frequency (-2.0 to 2.0). Positive = less repetition
+# - PRESENCE_PENALTY: Penalize tokens that have appeared (-2.0 to 2.0). Positive = more diverse
+# - REPETITION_PENALTY: Repetition penalty (>0.0). Values > 1.0 reduce repetition
+
+# Note: Not all models support all parameters. Set to null to disable a parameter.

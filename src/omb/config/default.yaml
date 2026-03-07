@@ -1,0 +1,182 @@
+# Default configuration for omb
+
+# LiteLLM API Configuration
+LITELLM_API_KEY: ""  # Set via LITELLM_API_KEY environment variable
+LITELLM_API_BASE: ""
+
+# OpenRouter API Configuration
+ROUTER_API_BASE: "https://openrouter.ai/api/v1/chat/completions"
+ROUTER_API_KEY: ""  # Set via OPENROUTER_API_KEY environment variable
+
+# Judge Models (used for grading)
+JUDGE_MODELS:
+  - "google/gemini-3-pro-preview"
+  #- "google/gemini-3.1-pro-preview"
+  #- "anthropic/claude-opus-4.6"
+  #- "openai/gpt-5.2"
+  #- "qwen/qwen3.5-plus-02-15"
+  #- "qwen/qwen3.5-397b-a17b"
+  #- "qwen/qwen3-max-thinking"
+  #- "z-ai/glm-5"
+  #- "moonshotai/kimi-k2.5"
+REASONING_EFFORT: "high"  # Options: 'low', 'medium', 'high', or null
+
+# Reference Models (models with existing responses and human scores)
+REFERENCE_MODELS:
+  - null
+  #- "gpt5_high_search"
+  #- "qwen_dr"
+
+# Generator Models (models that need responses generated)
+GENERATOR_MODELS:
+  #- null
+  # 1. Bare models
+  #- "openai/gpt-5.3-codex"
+  - "openai/gpt-5.2"
+  #- "google/gemini-3-pro-preview"
+  - "google/gemini-3.1-pro-preview"
+  #- "anthropic/claude-opus-4.5"
+  - "anthropic/claude-opus-4.6"
+  #- "anthropic/claude-sonnet-4.5"
+  #- "anthropic/claude-sonnet-4.6"
+  #- "x-ai/grok-4"
+  #- "minimax/minimax-m2.1"
+  #- "minimax/minimax-m2.5"
+  #- "moonshotai/kimi-k2-thinking"
+  - "moonshotai/kimi-k2.5"
+  #- "deepseek/deepseek-v3.2"
+  #- "deepseek/deepseek-v3.2-speciale"
+  #- "z-ai/glm-4.7"
+  - "z-ai/glm-5"
+  #- "qwen/qwen3-235b-a22b-2507"
+  - "qwen/qwen3.5-plus-02-15"
+  #- "qwen/qwen3.5-397b-a17b"
+  #- "qwen/qwen3.5-flash-02-23"
+  #- "qwen/qwen3.5-122b-a10b"
+  #- "qwen/qwen3.5-27b"
+  #- "qwen/qwen3.5-35b-a3b"
+  #- "stepfun/step-3.5-flash"
+  #- "qwen/qwen3-max-thinking"
+  
+  # Slow models
+  #- "doubao-seed-2-0-pro-260215"
+  #- "doubao-seed-1-8-251228"
+  #- "hunyuan-2.0-thinking-20251109"
+  #- "qwen3-max-2026-01-23"
+  
+  # 2. Models support search tool
+  #- "perplexity/sonar-pro-search"
+  
+  # 3. Deep Research Models
+  #- "alibaba/tongyi-deepresearch-30b-a3b"
+  #- "perplexity/sonar-deep-research"
+  #- "openai/o3-deep-research"
+  #- "openai/o4-mini-deep-research"
+
+
+# Ling-1T API Configuration
+LING_API_BASE: "https://api.tbox.cn/api/llm/v1/chat/completions"
+LING_API_KEY: ""  # Set via LING_API_KEY environment variable
+
+# VolcEngine API Configuration
+VOLC_API_BASE: "https://ark.cn-beijing.volces.com/api/v3"
+VOLC_API_KEY: ""  # Set via VOLC_API_KEY environment variable
+
+# DashScope API Configuration
+DASHSCOPE_API_BASE: "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"
+DASHSCOPE_API_KEY: ""  # Set via DASHSCOPE_API_KEY environment variable
+
+# Hunyuan API Configuration
+HUNYUAN_API_BASE: "https://api.hunyuan.cloud.tencent.com/v1/chat/completions"
+HUNYUAN_API_KEY: ""  # Set via HUNYUAN_API_KEY environment variable
+
+# API Request Parameters
+MAX_TOKENS: 128000
+#MAX_TOKENS: 32768
+#MAX_TOKENS: 65536
+TIMEOUT: 600  # seconds
+SAMPLE_K: 1  # Number of independent responses to sample per generator model per question
+REPEATED_JUDGE: 1  # Number of repeated judge runs per (model_response, judge_model) pair
+RETRY_TIMES: 8
+RETRY_DELAY: 10  # seconds
+MAX_GENERATION_CONCURRENCY: 128
+MAX_GRADING_CONCURRENCY: 128
+
+# Sampling Parameters (set to null to disable)
+TEMPERATURE: 1.0
+TOP_P: 0.95  # Nucleus sampling (0.0-1.0) - widely used default for good balance
+TOP_K: 20  # Top-k sampling (integer) - usually not needed when top_p is set
+MIN_P: null  # Minimum probability threshold (0.0-1.0) - advanced parameter, rarely needed
+FREQUENCY_PENALTY: null  # Penalize frequent tokens (-2.0 to 2.0) - 0.0 = no penalty
+PRESENCE_PENALTY: null  # Penalize present tokens (-2.0 to 2.0) - 0.0 = no penalty
+REPETITION_PENALTY: null  # Repetition penalty (>0.0) - 1.0 = no penalty (for models that support it)
+
+# Proxy Configuration
+PROXY: null  # Set to proxy URL if needed
+
+# Model Pricing (per 1M tokens in USD)
+MODEL_PRICING:
+  # OpenAI
+  "openai/gpt-5.3-codex": {input: 1.75, output: 14}
+  "openai/gpt-5.2": {input: 1.75, output: 14}
+  "openai/o3-deep-research": {input: 10, output: 40}
+  "openai/o4-mini-deep-research": {input: 2, output: 8}
+
+  # Anthropic
+  "anthropic/claude-opus-4.5": {input: 5.0, output: 25.0}
+  "anthropic/claude-opus-4.6": {input: 5.0, output: 25.0}
+  "anthropic/claude-sonnet-4.5": {input: 3.0, output: 15.0}
+  "anthropic/claude-sonnet-4.6": {input: 3.0, output: 15.0}
+
+  # xAI
+  "x-ai/grok-4": {input: 3.0, output: 15.0}
+
+  # Google
+  "google/gemini-3-pro-preview": {input: 2.0, output: 12.0}
+  "google/gemini-3.1-pro-preview": {input: 2.0, output: 12.0}
+
+  # Perplexity
+  "perplexity/sonar-deep-research": {input: 2.0, output: 8.0}
+
+  # Qwen
+  "qwen/qwen3-235b-a22b-thinking-2507": {input: 0.11, output: 0.60}
+  "alibaba/tongyi-deepresearch-30b-a3b": {input: 0.09, output: 0.40}
+  "qwen/qwen3-max-thinking": {input: 1.20, output: 6.00}
+  "qwen/qwen3.5-plus-02-15": {input: 0.40, output: 2.40}
+  "qwen/qwen3.5-397b-a17b": {input: 0.55, output: 3.5}
+  "qwen/qwen3.5-flash-02-23": {input: 0.10, output: 0.40}
+  "qwen/qwen3.5-122b-a10b": {input: 0.40, output: 3.20}
+  "qwen/qwen3.5-27b": {input: 0.30, output: 2.40}
+  "qwen/qwen3.5-35b-a3b": {input: 0.25, output: 2.00}
+
+
+  # DeepSeek
+  "deepseek/deepseek-v3.2": {input: 0.25, output: 0.38}
+  "deepseek/deepseek-v3.2-speciale": {input: 0.27, output: 0.41}
+
+  # Kimi
+  "moonshotai/kimi-k2-thinking": {input: 0.40, output: 1.75}
+  "moonshotai/kimi-k2.5": {input: 0.45, output: 2.25}
+
+  # MiniMax
+  "minimax/minimax-m2.1": {input: 0.27, output: 1.12}
+  "minimax/minimax-m2.5": {input: 0.30, output: 1.20}
+
+  # GLM
+  "z-ai/glm-4.7": {input: 0.40, output: 1.50}
+  "z-ai/glm-5": {input: 1.00, output: 3.20}
+
+  # Seed
+  "doubao-seed-1-8-251228": {input: 0.11, output: 0.29}
+
+  # Tencent Huanyuan
+  "hunyuan-2.0-thinking-20251109": {input: 0.14, output: 0.57}
+
+  # StepFun
+  "stepfun/step-3.5-flash": {input: 0.10, output: 0.30}
+
+  # Others (no cost or custom pricing)
+  "Ling-1T": {input: 0.0, output: 0.0}
+
+# Default pricing for unknown models (per 1M tokens in USD)
+DEFAULT_PRICING: {input: 1.00, output: 2.00}
