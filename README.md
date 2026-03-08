@@ -1,4 +1,4 @@
-# OneMillionBench
+# $OneMillion-Bench
 
 A rubric-based automated evaluation system for LLM responses across professional domains. Evaluates 50+ models from 6 API providers with weighted binary grading, async concurrency, cost tracking, and Excel/JSON reporting.
 
