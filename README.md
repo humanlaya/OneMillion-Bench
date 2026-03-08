@@ -1,6 +1,6 @@
-# $OneMillion-Bench
+# $1M-Bench
 
-A rubric-based automated evaluation system for LLM responses across professional domains. Evaluates 50+ models from 6 API providers with weighted binary grading, async concurrency, cost tracking, and Excel/JSON reporting.
+A rubric-based automated evaluation system for language agents capabilities on economically conceptual tasks across professional domains. It evaluates 50+ models or agent systems from 6 API-based providers with weighted binary grading, async concurrency, cost tracking, and Excel/JSON reporting.
 
 Contact: liuyang@bigai.ai
 
@@ -21,7 +21,7 @@ Contact: liuyang@bigai.ai
 
 ## Overview
 
-OneMillionBench is a CLI tool (`omb`) that generates LLM responses, grades them against weighted rubrics using judge models, and produces reports.
+$1M-Bench is a CLI tool (`omb`) that generates LLM responses, grades them against weighted rubrics using judge models, and produces reports.
 
 - **50+ models** across 6 providers (OpenRouter, Qwen/DashScope, VolcEngine, Hunyuan, Ling-1T, LiteLLM)
 - **Concurrent async processing** with up to 128 parallel requests
@@ -33,9 +33,9 @@ OneMillionBench is a CLI tool (`omb`) that generates LLM responses, grades them 
 
 ## Dataset
 
-### OneMillionBench-0216
+### $1M-Bench
 
-**5 professional domains**, bilingual (Chinese + English), **400 test cases**:
+**5 professional domains**, bilingual (Chinese + English), **400 questions**:
 
 | Domain | CN | EN | Total | Description |
 | ------ | -- | -- | ----- | ----------- |
@@ -45,9 +45,7 @@ OneMillionBench is a CLI tool (`omb`) that generates LLM responses, grades them 
 | Law | 40 | 40 | 80 | Corporate/commercial law, M&A |
 | Natural Sciences | 40 | 40 | 80 | Chemistry, materials science |
 
-Each test case (`SQL_Item_*.json`) contains a prompt, optional system prompt, domain tags, and 5-23 **weighted rubrics** labeled as: Factual Information, Analytical Reasoning, Instructions Following, or Structure and Formatting.
-
-Dataset path: `datasets/OneMillionBench-0216/{Domain}/{CN,EN}/`.
+Each test case contains a prompt, optional system prompt, domain tags, and 5-23 **weighted rubrics** labeled as: Factual Information, Analytical Reasoning, Instructions Following, or Structure and Formatting.
 
 ## Installation
 
@@ -55,8 +53,8 @@ Requires Python 3.10+. conda recommended.
 
 ```bash
 conda create -n evals python=3.10 -y && conda activate evals
-git clone https://github.com/yourusername/OneMillionBench.git
-cd OneMillionBench
+git clone https://github.com/humanlaya/1M-Bench.git
+cd 1M-Bench
 pip install -e .
 omb --version  # verify installation
 ```
@@ -66,13 +64,14 @@ omb --version  # verify installation
 ### 1. Download the dataset
 
 ```bash
-hf download Humanlaya-Research-Insititution/OneMillion-Bench --repo-type=dataset --local-dir datasets/OneMillionBench-0216
+mkdir datasets
+hf download Humanlaya-Research-Insititution/1M-Bench --repo-type=dataset --local-dir datasets/1M-Bench
 ```
 
 ### 2. Set API keys
 
 ```bash
-export OPENROUTER_API_KEY="sk-or-v1-your-key-here"   # Required (50+ models)
+export OPENROUTER_API_KEY="your-key"                  # Required (recommended for 50+ models)
 export DASHSCOPE_API_KEY="your-key"                   # Optional: Qwen / DashScope
 export VOLC_API_KEY="your-key"                        # Optional: VolcEngine (Doubao)
 export HUNYUAN_API_KEY="your-key"                     # Optional: Tencent Hunyuan
@@ -80,9 +79,9 @@ export LING_API_KEY="your-key"                        # Optional: Ling-1T
 export LITELLM_API_KEY="your-key"                     # Optional: LiteLLM
 ```
 
-Add these to `~/.bashrc` or `~/.zshrc` to persist across sessions.
+p.s. add these to `~/.bashrc` or `~/.zshrc` to persist across sessions.
 
-### 3. Configure models
+### 3. Configure evals
 
 ```bash
 cp src/omb/config/default.yaml my_config.yaml
@@ -95,23 +94,23 @@ JUDGE_MODELS:
   - "google/gemini-3-pro-preview"
 
 GENERATOR_MODELS:
-  - "openai/gpt-5.2"
+  - "openai/gpt-5.4"
   - "anthropic/claude-opus-4.6"
-  - "qwen/qwen3.5-plus-02-15"
+  - "google/gemini-3.1-pro-preview"
 ```
 
-### 4. Run evaluation
+### 4. Run evals
 
 ```bash
-omb eval --dataset datasets/OneMillionBench-0216/Healthcare --config my_config.yaml            # single domain
-omb eval --dataset datasets/OneMillionBench-0216 --config my_config.yaml --recursive           # all domains
-omb eval --dataset datasets/OneMillionBench-0216/Law --config my_config.yaml --grade-only      # grade only
+omb eval --dataset datasets/1M-Bench/Healthcare --config my_config.yaml            # single domain
+omb eval --dataset datasets/1M-Bench --config my_config.yaml --recursive           # all domains
+omb eval --dataset datasets/1M-Bench/Law --config my_config.yaml --grade-only      # grade only
 ```
 
 ### 5. Python API
 
 ```bash
-python examples/auto_grading.py --dataset datasets/OneMillionBench-0216/Healthcare --config my_config.yaml
+python examples/auto_grading.py --dataset datasets/1M-Bench/Healthcare --config my_config.yaml
 ```
 
 Results are written to `outputs/result_YYYYMMDD_HHMMSS/`.
@@ -163,13 +162,13 @@ Managed via YAML files. Copy `src/omb/config/default.yaml` and modify as needed.
 | `JUDGE_MODELS` | Models used for grading |
 | `GENERATOR_MODELS` | Models to evaluate |
 | `REFERENCE_MODELS` | Optional baseline models with existing responses |
-| `REASONING_EFFORT` | Judge reasoning: `"low"`, `"medium"`, `"high"`, or `null` |
+| `REASONING_EFFORT` | Judge reasoning: `"low"`, `"medium"`, `"high"`, `"xhigh"`, or `null` |
 
 ### Parameters
 
 | Parameter | Default | Description |
 | --------- | ------- | ----------- |
-| `MAX_TOKENS` | 128000 | Max output tokens |
+| `MAX_TOKENS` | 128,000 | Max output tokens |
 | `TIMEOUT` | 600 | API timeout (seconds) |
 | `RETRY_TIMES` | 8 | Retry attempts |
 | `SAMPLE_K` | 1 | Response samples per generator |
@@ -188,7 +187,7 @@ Each test case is a JSON file:
 | ----- | ---- | ----------- |
 | `prompt` | string | Question or instruction |
 | `system_prompt` | string | Optional system prompt |
-| `tags` | list[string] | Domain hierarchy, e.g. `["Healthcare", "Pharma", "Gene Therapy"]` |
+| `tags` | list[string] | Domain hierarchy, e.g., `["Healthcare", "Pharma", "Gene Therapy"]` |
 | `case_id` | int | Unique test case ID |
 | `rubrics` | list[object] | Evaluation rubrics (see below) |
 
@@ -205,7 +204,7 @@ Each rubric:
 
 ```json
 {
-  "prompt": "Explain the concept of viral titer in gene therapy...",
+  "prompt": "Explain the concept of viral titer in gene therapy ...",
   "system_prompt": "",
   "tags": ["Healthcare", "Pharma", "Gene Therapy"],
   "case_id": 2860,
@@ -255,7 +254,7 @@ make clean          # Remove build artifacts
 
 ## Frequently asked questions
 
-**What models are supported?** 50+ models through 6 providers. Specified as `provider/model` (e.g., `openai/gpt-5.2`). See `src/omb/config/default.yaml` for the full list.
+**What models are supported?** 50+ models through 6 providers. Specified as `provider/model` (e.g., `openai/gpt-5.4`). See `src/omb/config/default.yaml` for the full list.
 
 **Can I add a new LLM provider?** Yes. Extend `BaseLLMClient` in `src/omb/clients/` and implement the `call()` method.
 
