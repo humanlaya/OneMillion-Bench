@@ -1,4 +1,4 @@
-# $1M-Bench
+# $OneMillion-Bench
 
 A rubric-based automated evaluation system for language agents capabilities on economically conceptual tasks across professional domains. It evaluates 50+ models or agent systems from 6 API-based providers with weighted binary grading, async concurrency, cost tracking, and Excel/JSON reporting.
 
@@ -21,7 +21,7 @@ Contact: liuyang@bigai.ai
 
 ## Overview
 
-$1M-Bench is a CLI tool (`omb`) that generates LLM responses, grades them against weighted rubrics using judge models, and produces reports.
+$OneMillion-Bench is a CLI tool (`omb`) that generates LLM responses, grades them against weighted rubrics using judge models, and produces reports.
 
 - **50+ models** across 6 providers (OpenRouter, Qwen/DashScope, VolcEngine, Hunyuan, Ling-1T, LiteLLM)
 - **Concurrent async processing** with up to 128 parallel requests
@@ -33,7 +33,7 @@ $1M-Bench is a CLI tool (`omb`) that generates LLM responses, grades them agains
 
 ## Dataset
 
-### $1M-Bench
+### $OneMillion-Bench
 
 **5 professional domains**, bilingual (Chinese + English), **400 questions**:
 
@@ -53,8 +53,8 @@ Requires Python 3.10+. conda recommended.
 
 ```bash
 conda create -n evals python=3.10 -y && conda activate evals
-git clone https://github.com/humanlaya/1M-Bench.git
-cd 1M-Bench
+git clone https://github.com/humanlaya/OneMillion-Bench.git
+cd OneMillion-Bench
 pip install -e .
 omb --version  # verify installation
 ```
@@ -65,7 +65,7 @@ omb --version  # verify installation
 
 ```bash
 mkdir datasets
-hf download Humanlaya-Research-Insititution/1M-Bench --repo-type=dataset --local-dir datasets/1M-Bench
+hf download Humanlaya-Research-Insititution/OneMillion-Bench --repo-type=dataset --local-dir datasets/OneMillion-Bench
 ```
 
 ### 2. Set API keys
@@ -102,15 +102,15 @@ GENERATOR_MODELS:
 ### 4. Run evals
 
 ```bash
-omb eval --dataset datasets/1M-Bench/Healthcare --config my_config.yaml            # single domain
-omb eval --dataset datasets/1M-Bench --config my_config.yaml --recursive           # all domains
-omb eval --dataset datasets/1M-Bench/Law --config my_config.yaml --grade-only      # grade only
+omb eval --dataset datasets/OneMillion-Bench/Healthcare --config my_config.yaml            # single domain
+omb eval --dataset datasets/OneMillion-Bench --config my_config.yaml --recursive           # all domains
+omb eval --dataset datasets/OneMillion-Bench/Law --config my_config.yaml --grade-only      # grade only
 ```
 
 ### 5. Python API
 
 ```bash
-python examples/auto_grading.py --dataset datasets/1M-Bench/Healthcare --config my_config.yaml
+python examples/auto_grading.py --dataset datasets/OneMillion-Bench/Healthcare --config my_config.yaml
 ```
 
 Results are written to `outputs/result_YYYYMMDD_HHMMSS/`.
