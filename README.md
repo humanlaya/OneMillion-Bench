@@ -264,6 +264,16 @@ make clean          # Remove build artifacts
 
 **How is cost tracked?** Token usage is tracked per model per call. Costs are computed from the pricing table in the config and reported in both Excel and JSON outputs.
 
+## Citation
+```latex
+@article{yang2026onemillionbench,
+    title={\$OneMillion-Bench: How Far are Language Agents from Human Experts?},
+    author={Yang, Qianyu and Liu, Yang and Li, Jiaqi and Bai, Jun and Chen, Hao and Chen, Kaiyuan and Duan, Tiliang and Dong, Jiayun and Hu, Xiaobo and Jia, Zixia and Liu, Yang and Peng, Tao and Ren, Yixin and Tian, Ran and Wang, Zaiyuan and Xiao, Yanglihong and Yao, Gang and Yin, Lingyue and Zhang, Ge and Zhang, Chun and Jiao, Jianpeng and Zheng, Zilong and Gong, Yuan},
+    journal={arXiv preprint arXiv:2603.07980},
+    year={2026}
+}
+```
+
 ## License
 
 [Apache License 2.0](LICENSE)
