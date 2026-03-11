@@ -18,6 +18,7 @@ Contact: liuyang@bigai.ai
 * [Development](#development)
 * [Frequently asked questions](#frequently-asked-questions)
 * [License](#license)
+* [Citation](#citation)
 
 ## Overview
 
