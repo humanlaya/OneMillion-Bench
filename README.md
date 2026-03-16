@@ -1,5 +1,13 @@
 # $OneMillion-Bench
 
+<p align="center">
+  <a href="https://huggingface.co/datasets/humanlaya-data-lab/OneMillion-Bench">Hugging Face</a> •
+  <a href="https://arxiv.org/abs/2603.07980">arXiv</a> •
+  <a href="https://www.bigai.ai/blog/news/%e9%80%9a%e7%a0%94%e9%99%a2%e5%8f%91%e5%b8%83%e8%a1%8c%e4%b8%9a%e6%99%ba%e8%83%bd%e4%bd%93%e5%9f%ba%e5%87%86%ef%bc%8c%e9%87%8d%e6%96%b0%e5%ae%9a%e4%b9%89%e6%95%b0%e5%ad%97%e5%91%98%e5%b7%a5">BIGAI</a> •
+  <a href="https://humanlaya.com/#/leaderboard/one-million-bench">Humanlaya</a> •
+  <a href="https://xbench.org/profession/onemillion">xbench</a>
+</p>
+
 A rubric-based automated evaluation system for language agents capabilities on economically conceptual tasks across professional domains. It evaluates 50+ models or agent systems from 6 API-based providers with weighted binary grading, async concurrency, cost tracking, and Excel/JSON reporting.
 
 Contact: liuyang@bigai.ai
