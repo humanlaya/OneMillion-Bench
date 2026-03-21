@@ -8,6 +8,8 @@
   <a href="https://xbench.org/profession/onemillion">xbench</a>
 </p>
 
+> As AI learns to gather the scattered sixpence, human gains the liberty to look up at the moon.
+
 <img alt="npr-poster" src="assets/omb.png">
 
 </div>
