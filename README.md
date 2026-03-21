@@ -8,6 +8,10 @@
   <a href="https://xbench.org/profession/onemillion">xbench</a>
 </p>
 
+<img alt="npr-poster" src="assets/omb.png">
+
+</div>
+
 A rubric-based automated evaluation system for language agents capabilities on economically conceptual tasks across professional domains. It evaluates 50+ models or agent systems from 6 API-based providers with weighted binary grading, async concurrency, cost tracking, and Excel/JSON reporting.
 
 Contact: liuyang@bigai.ai
