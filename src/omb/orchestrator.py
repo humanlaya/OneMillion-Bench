@@ -85,7 +85,7 @@ class Orchestrator:
         return data.get("prompt") or data.get("Prompt", "")
 
     def scan_files(
-        self, test_dir: Path, pattern: str = "*SQL_Item_*.json"
+        self, test_dir: Path, pattern: str = "*.json"
     ) -> List[Path]:
         """Scan directory for JSON files.
 
@@ -127,25 +127,47 @@ class Orchestrator:
                 old_data = data[section]
                 data[section] = {"_legacy": old_data}
 
-    def load_file_data(self, json_files: List[Path]) -> None:
+    def _normalize_item(self, data: Dict[str, Any]) -> None:
+        """Normalize field names for a single data item in-place."""
+        if "Prompt" in data and "prompt" not in data:
+            data["prompt"] = data["Prompt"]
+        if "question" in data and "prompt" not in data:
+            data["prompt"] = data["question"]
+        if "Rubrics" in data and "rubrics" not in data:
+            data["rubrics"] = data["Rubrics"]
+        if "System_Prompt" in data and "system_prompt" not in data:
+            data["system_prompt"] = data["System_Prompt"]
+        self._migrate_legacy_scores(data)
+
+    def load_file_data(self, json_files: List[Path]) -> List[Path]:
         """Load all JSON files into memory.
+
+        If a file contains a JSON array, each element is expanded into a
+        virtual path (e.g. test_0.json, test_1.json) so the rest of the
+        pipeline can treat every item as an independent file.
 
         Args:
             json_files: List of JSON file paths
+
+        Returns:
+            Expanded list of paths (virtual paths for list-format files).
         """
+        expanded: List[Path] = []
         for json_path in json_files:
             with open(json_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                # Robustness for "prompt" vs "Prompt" and other potential caption cases
-                if "Prompt" in data and "prompt" not in data:
-                    data["prompt"] = data["Prompt"]
-                if "Rubrics" in data and "rubrics" not in data:
-                    data["rubrics"] = data["Rubrics"]
-                if "System_Prompt" in data and "system_prompt" not in data:
-                    data["system_prompt"] = data["System_Prompt"]
-                # Migrate legacy flat format to nested format
-                self._migrate_legacy_scores(data)
+
+            if isinstance(data, list):
+                for idx, item in enumerate(data):
+                    virtual_path = json_path.parent / f"{json_path.stem}_{idx}.json"
+                    self._normalize_item(item)
+                    self.file_data_map[virtual_path] = item
+                    expanded.append(virtual_path)
+            else:
+                self._normalize_item(data)
                 self.file_data_map[json_path] = data
+                expanded.append(json_path)
+        return expanded
 
     def collect_existing_grading_data(
         self, json_files: List[Path], overwrite: bool = False, grade_only: bool = False
@@ -473,6 +495,13 @@ class Orchestrator:
             print_error("No files found")
             return
 
+        # Load files (expands list-format JSON into individual items)
+        json_files = self.load_file_data(json_files)
+
+        if not json_files:
+            print_error("No files found")
+            return
+
         # Apply limit if specified
         if limit is not None and limit > 0:
             original_count = len(json_files)
@@ -539,9 +568,8 @@ class Orchestrator:
             overwrite: Overwrite existing results
             grade_only: Only grade existing responses, skip generation
         """
-        # Load all files
+        # Scan existing data
         print_section("Scanning Files: Collecting existing and missing models")
-        self.load_file_data(json_files)
 
         # Clear existing generator responses when overwriting (before collecting tasks)
         if overwrite and not grade_only:
@@ -1475,7 +1503,7 @@ class Orchestrator:
         print_section("")
 
 
-def _discover_leaf_dirs(root: Path, pattern: str = "*SQL_Item_*.json") -> List[Path]:
+def _discover_leaf_dirs(root: Path, pattern: str = "*.json") -> List[Path]:
     """Discover leaf directories that contain matching test files.
 
     Args:
