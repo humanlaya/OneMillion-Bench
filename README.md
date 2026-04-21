@@ -52,13 +52,13 @@ $OneMillion-Bench is a CLI tool (`omb`) that generates LLM responses, grades the
 
 **5 professional domains**, bilingual (Chinese + English), **400 questions**:
 
-| Domain | CN | EN | Total | Description |
-| ------ | -- | -- | ----- | ----------- |
-| Healthcare | 40 | 40 | 80 | Clinical medicine, oncology, pharma, gene & cell therapy |
-| Finance | 40 | 40 | 80 | Investment, equities, financial analysis |
-| Industry | 40 | 40 | 80 | Systems engineering, embedded systems, robotics |
-| Law | 40 | 40 | 80 | Corporate/commercial law, M&A |
-| Natural Sciences | 40 | 40 | 80 | Chemistry, materials science |
+| Domain | Directory | CN | EN | Total | Description |
+| ------ | --------- | -- | -- | ----- | ----------- |
+| Healthcare & Medicine | `healthcare_and_medicine` | 40 | 40 | 80 | Clinical medicine, oncology, pharma, gene & cell therapy |
+| Economics & Finance | `economics_and_finance` | 40 | 40 | 80 | Investment, equities, financial analysis |
+| Industry | `industry` | 40 | 40 | 80 | Systems engineering, embedded systems, robotics |
+| Law | `law` | 40 | 40 | 80 | Corporate/commercial law, M&A |
+| Natural Science | `natural_science` | 40 | 40 | 80 | Chemistry, materials science |
 
 Each test case contains a prompt, optional system prompt, domain tags, and 5-23 **weighted rubrics** labeled as: Factual Information, Analytical Reasoning, Instructions Following, or Structure and Formatting.
 
@@ -117,15 +117,15 @@ GENERATOR_MODELS:
 ### 4. Run evals
 
 ```bash
-omb eval --dataset datasets/OneMillion-Bench/Healthcare --config my_config.yaml            # single domain
-omb eval --dataset datasets/OneMillion-Bench --config my_config.yaml --recursive           # all domains
-omb eval --dataset datasets/OneMillion-Bench/Law --config my_config.yaml --grade-only      # grade only
+omb eval --dataset datasets/OneMillion-Bench/healthcare_and_medicine --config my_config.yaml            # single domain
+omb eval --dataset datasets/OneMillion-Bench --config my_config.yaml --recursive                       # all domains
+omb eval --dataset datasets/OneMillion-Bench/law --config my_config.yaml --grade-only                  # grade only
 ```
 
 ### 5. Python API
 
 ```bash
-python examples/auto_grading.py --dataset datasets/OneMillion-Bench/Healthcare --config my_config.yaml
+python examples/auto_grading.py --dataset datasets/OneMillion-Bench/healthcare_and_medicine --config my_config.yaml
 ```
 
 Results are written to `outputs/result_YYYYMMDD_HHMMSS/`.
