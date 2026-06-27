@@ -24,7 +24,7 @@ from .utils import (
     console,
     create_config_table,
     create_cost_breakdown_table,
-    create_metric_summary_table,
+    create_judge_metric_summaries,
     create_metadata_table,
     create_performance_table,
     create_summary_table,
@@ -1122,9 +1122,9 @@ class Orchestrator:
         final_metrics = self._build_final_metrics_summary(all_performance)
         if final_metrics:
             print_section("Final Metrics")
-            metrics_table = create_metric_summary_table(final_metrics)
-            console.print(metrics_table)
-            err_console.print()
+            for metrics_summary in create_judge_metric_summaries(final_metrics):
+                console.print(metrics_summary, soft_wrap=True)
+                err_console.print()
 
         for judge_model_name, performance_data in all_performance.items():
             print_section(f"Performance: {judge_model_name}")
@@ -1382,6 +1382,14 @@ class Orchestrator:
                 economic_value = {model_name: "N/A" for model_name in models_list}
             metrics["Economic Value"] = economic_value
 
+            global_cn_sets = {}
+            for model_name in models_list:
+                stats = model_totals[model_name]
+                global_cn_sets[model_name] = str(
+                    len(stats.get("task_accuracies", []))
+                )
+            metrics["Global+CN Sets"] = global_cn_sets
+
             all_results[judge_model_name] = {
                 "models": models_list,
                 "metrics": metrics,
@@ -1400,6 +1408,7 @@ class Orchestrator:
             normed_scores = metrics.get("Normed Expert Score (%)", {})
             pass_rates = metrics.get("Pass Rate (%)", {})
             economic_values = metrics.get("Economic Value", {})
+            global_cn_sets = metrics.get("Global+CN Sets", {})
 
             for model_name in models:
                 key = f"{judge_model_name}::{model_name}"
@@ -1410,6 +1419,7 @@ class Orchestrator:
                         normed_scores.get(model_name, "N/A")
                     ),
                     "pass_rate": str(pass_rates.get(model_name, "N/A")),
+                    "global_cn_sets": str(global_cn_sets.get(model_name, "N/A")),
                     "economic_value": str(economic_values.get(model_name, "N/A")),
                 }
         return final_metrics
