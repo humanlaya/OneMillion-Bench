@@ -80,7 +80,7 @@ omb --version  # verify installation
 
 ```bash
 mkdir datasets
-hf download Humanlaya-Research-Insititution/OneMillion-Bench --repo-type=dataset --local-dir datasets/OneMillion-Bench
+hf download humanlaya-data-lab/OneMillion-Bench --repo-type=dataset --local-dir datasets/OneMillion-Bench
 ```
 
 ### 2. Set API keys

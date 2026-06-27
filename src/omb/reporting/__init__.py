@@ -297,13 +297,13 @@ def generate_summary_sheet(
     # Data rows
     last_row = _generate_data_rows(ws, file_data_map, json_files, models_list, border, judge_model_name)
 
-    # Add macro average row
+    # Add Normed Expert Score row
     last_row = _add_macro_average_row(
         ws, file_data_map, json_files, models_list, border, last_row + 1, judge_model_name
     )
 
-    # Add micro average row
-    last_row = _add_micro_average_row(
+    # Add Pass Rate row
+    last_row = _add_pass_rate_row(
         ws, file_data_map, json_files, models_list, border, last_row + 1, judge_model_name
     )
 
@@ -574,7 +574,7 @@ def _add_macro_average_row(
     row: int,
     judge_model_name: str = "_legacy",
 ) -> int:
-    """Add macro average row showing average scores for each model.
+    """Add Normed Expert Score row showing average task scores for each model.
 
     Args:
         ws: Worksheet object
@@ -610,9 +610,8 @@ def _add_macro_average_row(
                 model_totals[model_name]["omb_norm_sum"] += omb_norm
                 model_totals[model_name]["count"] += 1
 
-    # Add macro average row
     cell = ws.cell(row, 1)
-    cell.value = "Macro Average (%)"
+    cell.value = "Normed Expert Score (%)"
     cell.fill = PatternFill(
         start_color=GruvboxColors.PURPLE_NEUTRAL,
         end_color=GruvboxColors.PURPLE_NEUTRAL,
@@ -646,7 +645,7 @@ def _add_macro_average_row(
     return row
 
 
-def _add_micro_average_row(
+def _add_pass_rate_row(
     ws: Any,
     file_data_map: Dict[Path, Dict[str, Any]],
     json_files: List[Path],
@@ -655,7 +654,7 @@ def _add_micro_average_row(
     row: int,
     judge_model_name: str = "_legacy",
 ) -> int:
-    """Add micro average row showing average task accuracy for each model.
+    """Add Pass Rate row showing percentage of tasks with ExpertScore >= 0.7.
 
     Args:
         ws: Worksheet object
@@ -691,9 +690,8 @@ def _add_micro_average_row(
             if omb_norm is not None:
                 model_task_accuracies[model_name].append(omb_norm)
 
-    # Add micro average row
     cell = ws.cell(row, 1)
-    cell.value = "Micro Average (%)"
+    cell.value = "Pass Rate (%)"
     cell.fill = PatternFill(
         start_color=GruvboxColors.PURPLE_NEUTRAL,
         end_color=GruvboxColors.PURPLE_NEUTRAL,
@@ -713,10 +711,9 @@ def _add_micro_average_row(
         cell = ws.cell(row, col)
         task_accuracies = model_task_accuracies[model]
 
-        if len(task_accuracies) > 0:
-            # Calculate average task accuracy and convert to percentage
-            avg_accuracy = sum(task_accuracies) / len(task_accuracies)
-            percentage = avg_accuracy * 100
+        if task_accuracies:
+            passed = sum(1 for accuracy in task_accuracies if accuracy >= 0.7)
+            percentage = (passed / len(task_accuracies)) * 100
             cell.value = f"{percentage:.1f}%"
             cell.font = Font(color=GruvboxColors.AQUA, bold=True)
         else:
@@ -1399,15 +1396,72 @@ def generate_json_report(
             "model_usage": summary["model_usage"],
         }
 
+    final_metrics = _build_final_metrics_summary(performance_data, cost_data)
+
     # Combine into final report
     report = {
         "performance": performance_data,
+        "final_metrics": final_metrics,
         "cost_breakdown": cost_data,
     }
 
     # Save JSON file
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(report, f, ensure_ascii=False, indent=4)
+
+
+def _build_final_metrics_summary(
+    performance_data: Dict[str, Any], cost_data: Dict[str, Any]
+) -> Dict[str, Any]:
+    """Build compact final metrics for post-run review."""
+    rows = {}
+
+    for judge_model_name, judge_data in performance_data.items():
+        if "runs" in judge_data and "aggregate" in judge_data:
+            candidates = {f"{judge_model_name} aggregate": judge_data["aggregate"]}
+        else:
+            candidates = {judge_model_name: judge_data}
+
+        for display_judge, metrics_data in candidates.items():
+            models = metrics_data.get("models", [])
+            normed_scores = (
+                metrics_data.get("normed_expert_score")
+                or metrics_data.get("metrics", {}).get("Normed Expert Score (%)", {})
+                or metrics_data.get("macro_averages", {})
+            )
+            pass_rates = (
+                metrics_data.get("pass_rate")
+                or metrics_data.get("metrics", {}).get("Pass Rate (%)", {})
+                or metrics_data.get("micro_averages", {})
+            )
+            economic_value = metrics_data.get("economic_value")
+            economic_models = {}
+            if isinstance(economic_value, dict):
+                economic_models = economic_value.get("models", {})
+            if not economic_models:
+                economic_models = (
+                    metrics_data.get("metrics", {}).get("Economic Value", {})
+                )
+
+            for model_name in models:
+                ev_value = economic_models.get(model_name, "N/A")
+                if isinstance(ev_value, dict):
+                    ev_value = ev_value.get("display", "N/A")
+                key = f"{display_judge}::{model_name}"
+                rows[key] = {
+                    "judge": str(display_judge),
+                    "model": str(model_name),
+                    "normed_expert_score": str(
+                        normed_scores.get(model_name, "N/A")
+                    ),
+                    "pass_rate": str(pass_rates.get(model_name, "N/A")),
+                    "economic_value": str(ev_value),
+                }
+
+    return {
+        "metrics": rows,
+        "token_usage": cost_data,
+    }
 
 
 def _build_performance_data(
@@ -1589,27 +1643,27 @@ def _build_performance_data(
                     model_totals[model_name]["omb_norm_sum"] += omb_norm
                     model_totals[model_name]["task_accuracies"].append(omb_norm)
 
-    macro_averages = {}
+    normed_expert_scores = {}
     for model_name in models_list:
         stats = model_totals[model_name]
         task_accuracies = stats.get("task_accuracies", [])
         if task_accuracies:
             percentage = (stats["omb_norm_sum"] / len(task_accuracies)) * 100
-            macro_averages[model_name] = f"{percentage:.1f}%"
+            normed_expert_scores[model_name] = f"{percentage:.1f}%"
         else:
-            macro_averages[model_name] = "N/A"
+            normed_expert_scores[model_name] = "N/A"
 
-    # Calculate micro averages
-    micro_averages = {}
+    # Calculate pass rates
+    pass_rates = {}
     for model_name in models_list:
         stats = model_totals[model_name]
         task_accuracies = stats.get("task_accuracies", [])
-        if len(task_accuracies) > 0:
-            avg_accuracy = sum(task_accuracies) / len(task_accuracies)
-            percentage = avg_accuracy * 100
-            micro_averages[model_name] = f"{percentage:.1f}%"
+        if task_accuracies:
+            passed = sum(1 for accuracy in task_accuracies if accuracy >= 0.7)
+            percentage = (passed / len(task_accuracies)) * 100
+            pass_rates[model_name] = f"{percentage:.1f}%"
         else:
-            micro_averages[model_name] = "N/A"
+            pass_rates[model_name] = "N/A"
 
     # Calculate per-model consistency rates
     model_consistency_stats = {}
@@ -1702,8 +1756,11 @@ def _build_performance_data(
     return {
         "models": models_list,
         "task_scores": task_scores,
-        "macro_averages": macro_averages,
-        "micro_averages": micro_averages,
+        "normed_expert_score": normed_expert_scores,
+        "pass_rate": pass_rates,
+        # Backward-compatible aliases for older consumers.
+        "macro_averages": normed_expert_scores,
+        "micro_averages": pass_rates,
         "per_model_consistency_rate": model_consistency_stats,
         "overall_consistency_rate": overall_consistency_rate,
         "economic_value": economic_value,

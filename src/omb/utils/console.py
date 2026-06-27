@@ -278,6 +278,35 @@ def create_summary_table(summary_data: Dict[str, Any]) -> Table:
     return table
 
 
+def create_metric_summary_table(summary_rows: Dict[str, Dict[str, str]]) -> Table:
+    """Create a compact final metric summary table."""
+    table = Table(
+        title="Final Metrics",
+        box=box.ROUNDED,
+        show_header=True,
+        header_style=f"bold {RichColors.MAGENTA}",
+        border_style=RichColors.HEADER_BORDER,
+        padding=(0, 1),
+    )
+
+    table.add_column("Judge", style=RichColors.CYAN, no_wrap=True)
+    table.add_column("Model", style=f"bold {RichColors.GREEN}", no_wrap=True)
+    table.add_column("Normed Expert Score (%)", justify="right", style=RichColors.CYAN)
+    table.add_column("Pass Rate (%)", justify="right", style=RichColors.YELLOW)
+    table.add_column("Economic Value", justify="right", style=RichColors.ORANGE)
+
+    for row in summary_rows.values():
+        table.add_row(
+            row.get("judge", "N/A"),
+            row.get("model", "N/A"),
+            row.get("normed_expert_score", "N/A"),
+            row.get("pass_rate", "N/A"),
+            row.get("economic_value", "N/A"),
+        )
+
+    return table
+
+
 def create_performance_table(performance_data: Dict[str, Any]) -> Table:
     """
     Create an overall performance statistics table with models as columns.
