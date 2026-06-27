@@ -15,7 +15,7 @@ import aiohttp
 
 from .config import Config, ConfigManager, get_config
 from .processing import generate_model_response, grade_single_model
-from .reporting import generate_excel_report, generate_json_report
+from .reporting import _calculate_omb_norm, generate_excel_report, generate_json_report
 from .tracking import TokenTracker
 from .utils import (
     LOGO1,
@@ -1211,6 +1211,7 @@ class Orchestrator:
                                 "max_score": 0,
                                 "min_score": 0,
                                 "count": 0,
+                                "omb_norm_sum": 0.0,
                                 "task_accuracies": [],
                             }
                         if model_name not in model_consistency_stats:
@@ -1258,13 +1259,11 @@ class Orchestrator:
                         model_totals[model_name]["min_score"] += task_min_score
                         model_totals[model_name]["count"] += 1
 
-                        if task_max_score > 0:
-                            task_accuracy = total_score / task_max_score
-                            model_totals[model_name]["task_accuracies"].append(
-                                task_accuracy
-                            )
-                        elif task_max_score == 0 and task_min_score < 0:
-                            task_accuracy = 1 - (total_score / task_min_score)
+                        task_accuracy = _calculate_omb_norm(
+                            rubrics, rubric_auto_score, model_idx
+                        )
+                        if task_accuracy is not None:
+                            model_totals[model_name]["omb_norm_sum"] += task_accuracy
                             model_totals[model_name]["task_accuracies"].append(
                                 task_accuracy
                             )
@@ -1309,8 +1308,9 @@ class Orchestrator:
             macro_averages = {}
             for model_name in models_list:
                 stats = model_totals[model_name]
-                if stats["count"] > 0 and stats["max_score"] > 0:
-                    percentage = (stats["score"] / stats["max_score"]) * 100
+                task_accuracies = stats.get("task_accuracies", [])
+                if task_accuracies:
+                    percentage = (stats["omb_norm_sum"] / len(task_accuracies)) * 100
                     macro_averages[model_name] = f"{percentage:.1f}%"
                 else:
                     macro_averages[model_name] = "N/A"

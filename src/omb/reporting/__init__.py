@@ -63,6 +63,40 @@ def _get_judge_scores(data: Dict[str, Any], section: str, judge_model_name: str)
     return section_data.get(judge_model_name, {})
 
 
+def _clamp_rubric_score(score: Any, rubric_weight: Any) -> float:
+    weight = float(rubric_weight)
+    lower_bound = min(0.0, weight)
+    upper_bound = max(0.0, weight)
+    return min(max(float(score), lower_bound), upper_bound)
+
+
+def _calculate_omb_norm(
+    rubrics: List[Dict[str, Any]],
+    judge_scores: Dict[str, Any],
+    model_idx: int,
+) -> Optional[float]:
+    """Calculate task-level OMB Norm in [0, 1] for one model response."""
+    positive_weight_sum = sum(
+        max(0.0, float(rubric.get("rubric_weight", 0.0))) for rubric in rubrics
+    )
+    if positive_weight_sum <= 0:
+        return None
+
+    score_sum = 0.0
+    for rubric in rubrics:
+        rubric_num = rubric["rubric_number"]
+        score_key = f"rubric_{rubric_num}_response_{model_idx}_auto_score"
+        score = judge_scores.get(score_key)
+        if score is None or score == "NA":
+            return None
+        try:
+            score_sum += _clamp_rubric_score(score, rubric.get("rubric_weight", 0.0))
+        except (TypeError, ValueError):
+            return None
+
+    return min(max(score_sum / positive_weight_sum, 0.0), 1.0)
+
+
 def _parse_judge_run_name(name: str) -> Tuple[str, Optional[int]]:
     """Parse a judge model name that may contain ::run_N suffix.
 
@@ -545,52 +579,26 @@ def _add_macro_average_row(
     Returns:
         Last row number used
     """
-    # Calculate scores for each model across all tasks
-    model_scores = {model: [] for model in models_list}
-    model_totals = {model: {"score": 0, "max_score": 0, "count": 0} for model in models_list}
+    model_totals = {model: {"omb_norm_sum": 0.0, "count": 0} for model in models_list}
 
     for json_path in sorted(json_files):
         data = file_data_map[json_path]
         model_responses = data.get("model_response", {})
         rubrics = data.get("rubrics", [])
-        rubric_count = len(rubrics)
-
-        # Calculate max score from rubric weights
-        # For positive weights: max score is the weight value
-        # For negative weights: max score is 0 (best is avoiding the penalty)
-        task_max_score = 0
-        for rubric in rubrics:
-            rubric_weight = rubric.get("rubric_weight", 0)
-            if rubric_weight > 0:
-                task_max_score += rubric_weight
-
         for response_key, response_data in model_responses.items():
             model_name = response_data.get("model_name", "")
             if not model_name or model_name not in models_list:
                 continue
 
-            # Calculate total score for this model on this task
             match = re.match(r"model_response_(\d+)", response_key)
             if not match:
                 continue
             model_idx = int(match.group(1))
 
-            total_score = 0
             rubric_auto_score = _get_judge_scores(data, "rubric_auto_score", judge_model_name)
-            valid_rubrics = 0
-            for rubric in rubrics:
-                rubric_num = rubric["rubric_number"]
-                score_key = f"rubric_{rubric_num}_response_{model_idx}_auto_score"
-                score = rubric_auto_score.get(score_key, 0)
-                # Skip NA values
-                if score != "NA":
-                    total_score += score
-                    valid_rubrics += 1
-
-            if valid_rubrics > 0:
-                model_scores[model_name].append(total_score)
-                model_totals[model_name]["score"] += total_score
-                model_totals[model_name]["max_score"] += task_max_score
+            omb_norm = _calculate_omb_norm(rubrics, rubric_auto_score, model_idx)
+            if omb_norm is not None:
+                model_totals[model_name]["omb_norm_sum"] += omb_norm
                 model_totals[model_name]["count"] += 1
 
     # Add macro average row
@@ -615,9 +623,8 @@ def _add_macro_average_row(
         cell = ws.cell(row, col)
         stats = model_totals[model]
 
-        if stats["count"] > 0 and stats["max_score"] > 0:
-            # Calculate percentage: (total_score / total_max_score) * 100
-            percentage = (stats["score"] / stats["max_score"]) * 100
+        if stats["count"] > 0:
+            percentage = (stats["omb_norm_sum"] / stats["count"]) * 100
             cell.value = f"{percentage:.1f}%"
             cell.font = Font(color=GruvboxColors.AQUA, bold=True)
         else:
@@ -653,7 +660,6 @@ def _add_micro_average_row(
     Returns:
         Last row number used
     """
-    # Calculate task accuracies for each model
     model_task_accuracies = {model: [] for model in models_list}
 
     for json_path in sorted(json_files):
@@ -661,39 +667,20 @@ def _add_micro_average_row(
         model_responses = data.get("model_response", {})
         rubrics = data.get("rubrics", [])
 
-        # Calculate max score from rubric weights
-        task_max_score = 0
-        for rubric in rubrics:
-            rubric_weight = rubric.get("rubric_weight", 0)
-            if rubric_weight > 0:
-                task_max_score += rubric_weight
-
         for response_key, response_data in model_responses.items():
             model_name = response_data.get("model_name", "")
             if not model_name or model_name not in models_list:
                 continue
 
-            # Calculate total score for this model on this task
             match = re.match(r"model_response_(\d+)", response_key)
             if not match:
                 continue
             model_idx = int(match.group(1))
 
-            total_score = 0
             rubric_auto_score = _get_judge_scores(data, "rubric_auto_score", judge_model_name)
-            valid_rubrics = 0
-            for rubric in rubrics:
-                rubric_num = rubric["rubric_number"]
-                score_key = f"rubric_{rubric_num}_response_{model_idx}_auto_score"
-                score = rubric_auto_score.get(score_key, 0)
-                # Skip NA values
-                if score != "NA":
-                    total_score += score
-                    valid_rubrics += 1
-
-            if valid_rubrics > 0 and task_max_score > 0:
-                task_accuracy = total_score / task_max_score
-                model_task_accuracies[model_name].append(task_accuracy)
+            omb_norm = _calculate_omb_norm(rubrics, rubric_auto_score, model_idx)
+            if omb_norm is not None:
+                model_task_accuracies[model_name].append(omb_norm)
 
     # Add micro average row
     cell = ws.cell(row, 1)
@@ -1466,6 +1453,7 @@ def _build_performance_data(
             "max_score": 0,
             "min_score": 0,
             "count": 0,
+            "omb_norm_sum": 0.0,
             "task_accuracies": [],
         }
         for model in models_list
@@ -1513,16 +1501,17 @@ def _build_performance_data(
                 model_totals[model_name]["min_score"] += task_min_score
                 model_totals[model_name]["count"] += 1
 
-                # Calculate task accuracy for Micro Average
-                if task_max_score > 0:
-                    task_accuracy = total_score / task_max_score
-                    model_totals[model_name]["task_accuracies"].append(task_accuracy)
+                omb_norm = _calculate_omb_norm(rubrics, rubric_auto_score, model_idx)
+                if omb_norm is not None:
+                    model_totals[model_name]["omb_norm_sum"] += omb_norm
+                    model_totals[model_name]["task_accuracies"].append(omb_norm)
 
     macro_averages = {}
     for model_name in models_list:
         stats = model_totals[model_name]
-        if stats["count"] > 0 and stats["max_score"] > 0:
-            percentage = (stats["score"] / stats["max_score"]) * 100
+        task_accuracies = stats.get("task_accuracies", [])
+        if task_accuracies:
+            percentage = (stats["omb_norm_sum"] / len(task_accuracies)) * 100
             macro_averages[model_name] = f"{percentage:.1f}%"
         else:
             macro_averages[model_name] = "N/A"
