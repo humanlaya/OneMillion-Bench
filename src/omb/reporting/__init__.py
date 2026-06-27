@@ -12,6 +12,10 @@ from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
+from ..economic_value import (
+    compute_economic_value_from_data,
+    format_model_economic_value,
+)
 from ..utils.colors import ExcelColors as GruvboxColors
 
 
@@ -300,6 +304,11 @@ def generate_summary_sheet(
 
     # Add micro average row
     last_row = _add_micro_average_row(
+        ws, file_data_map, json_files, models_list, border, last_row + 1, judge_model_name
+    )
+
+    # Add Economic Value row
+    last_row = _add_economic_value_row(
         ws, file_data_map, json_files, models_list, border, last_row + 1, judge_model_name
     )
 
@@ -714,6 +723,56 @@ def _add_micro_average_row(
             cell.value = "N/A"
             cell.font = Font(color=GruvboxColors.GRAY)
 
+        cell.border = border
+        col += 1
+
+    return row
+
+
+def _add_economic_value_row(
+    ws: Any,
+    file_data_map: Dict[Path, Dict[str, Any]],
+    json_files: List[Path],
+    models_list: List[str],
+    border: Border,
+    row: int,
+    judge_model_name: str = "_legacy",
+) -> int:
+    """Add Economic Value totals for each model."""
+    cell = ws.cell(row, 1)
+    cell.value = "Economic Value"
+    cell.fill = PatternFill(
+        start_color=GruvboxColors.ORANGE_NEUTRAL,
+        end_color=GruvboxColors.ORANGE_NEUTRAL,
+        fill_type="solid",
+    )
+    cell.font = Font(bold=True, color=GruvboxColors.FG0, size=11)
+    cell.border = border
+
+    for empty_col in [2, 3]:
+        cell = ws.cell(row, empty_col)
+        cell.value = ""
+        cell.border = border
+
+    try:
+        report = compute_economic_value_from_data(
+            file_data_map=file_data_map,
+            json_files=json_files,
+            judge_model_name=judge_model_name,
+            models_list=models_list,
+        )
+    except (OSError, ValueError):
+        report = None
+
+    col = 4
+    for model in models_list:
+        cell = ws.cell(row, col)
+        if report is None:
+            cell.value = "N/A"
+            cell.font = Font(color=GruvboxColors.GRAY)
+        else:
+            cell.value = format_model_economic_value(report.models.get(model))
+            cell.font = Font(color=GruvboxColors.ORANGE, bold=True)
         cell.border = border
         col += 1
 
@@ -1200,6 +1259,30 @@ def _build_repeated_judge_aggregate(
         result[metric_key] = mean_vals
         result[f"{metric_key}_std"] = std_vals
 
+    economic_values = {}
+    for model_name in models_list:
+        cn_values = []
+        global_values = []
+        displays = []
+        for rd in run_data_list:
+            ev_model = rd.get("economic_value", {}).get("models", {}).get(model_name, {})
+            cn_total = ev_model.get("cn", {}).get("total")
+            global_total = ev_model.get("global", {}).get("total")
+            if cn_total is not None:
+                cn_values.append(float(cn_total))
+            if global_total is not None:
+                global_values.append(float(global_total))
+            display = ev_model.get("display")
+            if display and display != "N/A":
+                displays.append(display)
+
+        economic_values[model_name] = {
+            "cn_mean": sum(cn_values) / len(cn_values) if cn_values else None,
+            "global_mean": sum(global_values) / len(global_values) if global_values else None,
+            "display": " / ".join(displays) if displays else "N/A",
+        }
+    result["economic_value"] = {"models": economic_values}
+
     # Aggregate task_scores: mean and std per task per model
     if run_data_list and run_data_list[0].get("task_scores"):
         num_tasks = len(run_data_list[0]["task_scores"])
@@ -1606,6 +1689,16 @@ def _build_performance_data(
     if all_total > 0:
         overall_consistency_rate = f"{all_matches / all_total * 100:.1f}%"
 
+    try:
+        economic_value = compute_economic_value_from_data(
+            file_data_map=file_data_map,
+            json_files=json_files,
+            judge_model_name=judge_model_name,
+            models_list=models_list,
+        ).to_dict()
+    except (OSError, ValueError):
+        economic_value = None
+
     return {
         "models": models_list,
         "task_scores": task_scores,
@@ -1613,4 +1706,5 @@ def _build_performance_data(
         "micro_averages": micro_averages,
         "per_model_consistency_rate": model_consistency_stats,
         "overall_consistency_rate": overall_consistency_rate,
+        "economic_value": economic_value,
     }
