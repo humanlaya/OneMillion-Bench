@@ -15,7 +15,7 @@ import aiohttp
 
 from .config import Config, ConfigManager, get_config
 from .processing import generate_model_response, grade_single_model
-from .reporting import generate_excel_report, generate_json_report
+from .reporting import _calculate_omb_norm, generate_excel_report, generate_json_report
 from .tracking import TokenTracker
 from .utils import (
     LOGO1,
@@ -24,6 +24,7 @@ from .utils import (
     console,
     create_config_table,
     create_cost_breakdown_table,
+    create_judge_metric_summaries,
     create_metadata_table,
     create_performance_table,
     create_summary_table,
@@ -1118,6 +1119,13 @@ class Orchestrator:
 
         # Print performance table per judge model
         all_performance = self._calculate_performance_metrics(json_files)
+        final_metrics = self._build_final_metrics_summary(all_performance)
+        if final_metrics:
+            print_section("Final Metrics")
+            for metrics_summary in create_judge_metric_summaries(final_metrics):
+                console.print(metrics_summary, soft_wrap=True)
+                err_console.print()
+
         for judge_model_name, performance_data in all_performance.items():
             print_section(f"Performance: {judge_model_name}")
             performance_table = create_performance_table(performance_data)
@@ -1211,6 +1219,7 @@ class Orchestrator:
                                 "max_score": 0,
                                 "min_score": 0,
                                 "count": 0,
+                                "omb_norm_sum": 0.0,
                                 "task_accuracies": [],
                             }
                         if model_name not in model_consistency_stats:
@@ -1258,13 +1267,11 @@ class Orchestrator:
                         model_totals[model_name]["min_score"] += task_min_score
                         model_totals[model_name]["count"] += 1
 
-                        if task_max_score > 0:
-                            task_accuracy = total_score / task_max_score
-                            model_totals[model_name]["task_accuracies"].append(
-                                task_accuracy
-                            )
-                        elif task_max_score == 0 and task_min_score < 0:
-                            task_accuracy = 1 - (total_score / task_min_score)
+                        task_accuracy = _calculate_omb_norm(
+                            rubrics, rubric_auto_score, model_idx
+                        )
+                        if task_accuracy is not None:
+                            model_totals[model_name]["omb_norm_sum"] += task_accuracy
                             model_totals[model_name]["task_accuracies"].append(
                                 task_accuracy
                             )
@@ -1306,15 +1313,30 @@ class Orchestrator:
                     max_scores[model_name] = "N/A"
             metrics["Upper"] = max_scores
 
-            macro_averages = {}
+            normed_expert_scores = {}
             for model_name in models_list:
                 stats = model_totals[model_name]
-                if stats["count"] > 0 and stats["max_score"] > 0:
-                    percentage = (stats["score"] / stats["max_score"]) * 100
-                    macro_averages[model_name] = f"{percentage:.1f}%"
+                task_accuracies = stats.get("task_accuracies", [])
+                if task_accuracies:
+                    percentage = (stats["omb_norm_sum"] / len(task_accuracies)) * 100
+                    normed_expert_scores[model_name] = f"{percentage:.1f}%"
                 else:
-                    macro_averages[model_name] = "N/A"
-            metrics["Macro Average (%)"] = macro_averages
+                    normed_expert_scores[model_name] = "N/A"
+            metrics["Normed Expert Score (%)"] = normed_expert_scores
+
+            pass_rates = {}
+            for model_name in models_list:
+                stats = model_totals[model_name]
+                task_accuracies = stats.get("task_accuracies", [])
+                if task_accuracies:
+                    passed = sum(
+                        1 for accuracy in task_accuracies if accuracy >= 0.7
+                    )
+                    percentage = (passed / len(task_accuracies)) * 100
+                    pass_rates[model_name] = f"{percentage:.1f}%"
+                else:
+                    pass_rates[model_name] = "N/A"
+            metrics["Pass Rate (%)"] = pass_rates
 
             micro_averages = {}
             for model_name in models_list:
@@ -1338,12 +1360,69 @@ class Orchestrator:
                     consistency_rates[model_name] = "N/A"
             metrics["Consistency Rate (%)"] = consistency_rates
 
+            try:
+                from .economic_value import (
+                    compute_economic_value_from_data,
+                    format_model_economic_value,
+                )
+
+                economic_report = compute_economic_value_from_data(
+                    file_data_map=self.file_data_map,
+                    json_files=json_files,
+                    judge_model_name=judge_model_name,
+                    models_list=models_list,
+                )
+                economic_value = {
+                    model_name: format_model_economic_value(
+                        economic_report.models[model_name]
+                    )
+                    for model_name in models_list
+                }
+            except (OSError, ValueError):
+                economic_value = {model_name: "N/A" for model_name in models_list}
+            metrics["Economic Value"] = economic_value
+
+            global_cn_sets = {}
+            for model_name in models_list:
+                stats = model_totals[model_name]
+                global_cn_sets[model_name] = str(
+                    len(stats.get("task_accuracies", []))
+                )
+            metrics["Global+CN Sets"] = global_cn_sets
+
             all_results[judge_model_name] = {
                 "models": models_list,
                 "metrics": metrics,
             }
 
         return all_results
+
+    def _build_final_metrics_summary(
+        self, all_performance: Dict[str, Dict[str, Any]]
+    ) -> Dict[str, Dict[str, str]]:
+        """Build compact per-judge/per-model final metrics for printing and dumping."""
+        final_metrics = {}
+        for judge_model_name, performance_data in all_performance.items():
+            models = performance_data.get("models", [])
+            metrics = performance_data.get("metrics", {})
+            normed_scores = metrics.get("Normed Expert Score (%)", {})
+            pass_rates = metrics.get("Pass Rate (%)", {})
+            economic_values = metrics.get("Economic Value", {})
+            global_cn_sets = metrics.get("Global+CN Sets", {})
+
+            for model_name in models:
+                key = f"{judge_model_name}::{model_name}"
+                final_metrics[key] = {
+                    "judge": str(judge_model_name),
+                    "model": str(model_name),
+                    "normed_expert_score": str(
+                        normed_scores.get(model_name, "N/A")
+                    ),
+                    "pass_rate": str(pass_rates.get(model_name, "N/A")),
+                    "global_cn_sets": str(global_cn_sets.get(model_name, "N/A")),
+                    "economic_value": str(economic_values.get(model_name, "N/A")),
+                }
+        return final_metrics
 
     @staticmethod
     def _parse_judge_run_name(name: str):
@@ -1393,7 +1472,11 @@ class Orchestrator:
             models_list = first_data["models"]
 
             agg_metrics = {}
-            for metric_name in ["Macro Average (%)", "Micro Average (%)", "Consistency Rate (%)"]:
+            for metric_name in [
+                "Normed Expert Score (%)",
+                "Pass Rate (%)",
+                "Consistency Rate (%)",
+            ]:
                 mean_vals = {}
                 std_vals = {}
                 for model_name in models_list:
@@ -1463,13 +1546,18 @@ class Orchestrator:
                     "total_cost": costs["total_cost"],
                 }
 
-        # Show detailed cost breakdown
-        if formatted_cost_breakdown:
-            cost_table = create_cost_breakdown_table(
-                formatted_cost_breakdown, total_tokens, total_cost
-            )
-            console.print(cost_table)
-            err_console.print()
+        if not formatted_cost_breakdown:
+            formatted_cost_breakdown["TOTAL"] = {
+                "prompt_tokens": total_tokens["prompt_tokens"],
+                "completion_tokens": total_tokens["completion_tokens"],
+                "total_cost": total_cost,
+            }
+
+        cost_table = create_cost_breakdown_table(
+            formatted_cost_breakdown, total_tokens, total_cost
+        )
+        console.print(cost_table)
+        err_console.print()
 
     def _generate_report(self, json_files: List[Path], output_dir: Path) -> None:
         """Generate Excel report.
@@ -1499,6 +1587,17 @@ class Orchestrator:
 
         err_console.print()
         print_success(f"JSON Saved: {json_path}")
+        err_console.print()
+
+        final_metrics_path = output_dir / "final_metrics.json"
+        all_performance = self._calculate_performance_metrics(json_files)
+        final_metrics = {
+            "metrics": self._build_final_metrics_summary(all_performance),
+            "token_usage": self.token_tracker.get_summary(),
+        }
+        with open(final_metrics_path, "w", encoding="utf-8") as f:
+            json.dump(final_metrics, f, ensure_ascii=False, indent=4)
+        print_success(f"Final Metrics Saved: {final_metrics_path}")
         err_console.print()
         print_section("")
 
