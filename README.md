@@ -36,7 +36,9 @@ Contact: liuyang@bigai.ai
 
 ## Overview
 
-$OneMillion-Bench is a CLI tool (`omb`) that generates LLM responses, grades them against weighted rubrics using judge models, and produces reports.
+We maintains the $OneMillion-Bench evaluation toolkit and the latest leaderboard performance is available [here](https://xbench.org/profession/onemillion).
+
+$OneMillion-Bench is a CLI tool (`omb`) that generates LLM agent responses, grades them against weighted rubrics using judge models, and produces reports.
 
 - **50+ models** across 6 providers (OpenRouter, Qwen/DashScope, VolcEngine, Hunyuan, Ling-1T, LiteLLM)
 - **Concurrent async processing** with up to 128 parallel requests
