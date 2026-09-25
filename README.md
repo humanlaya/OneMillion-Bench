@@ -18,6 +18,13 @@ A rubric-based automated evaluation system for language agents capabilities on e
 
 Contact: liuyang@bigai.ai
 
+## News
+- **[2026.09.26]** $OneMillion-Bench has been accepted by [**NeurIPS 2026**](https://openreview.net/forum?id=2gAr3pMVHH) ✨. See you in 🇫🇷Paris/🇺🇸Atlanta/🇦🇺Sydney!
+- **[2026.08.28]** $OneMillion-Bench has been adopted as one of the official benchmarks by **Tencent [Hy4-preview](https://hy.tencent.ai/research/hy4-preview)**.
+- **[2026.08.03]** $OneMillion-Bench has been adopted as one of the official benchmarks by **Alibaba [Qwen3.8-Max](https://qwen.ai/blog?id=qwen3.8)**.
+- **[2026.06.23]** $OneMillion-Bench has been adopted as one of the official benchmarks by **ByteDance [Doubao-Seed-2.1](https://seed.bytedance.com/en/blog/seed2-1-officially-released-advancing-ai-productivity)**.
+- **[2026.03.10]** $OneMillion-Bench has been wide reported by **[机器之心](https://mp.weixin.qq.com/s/eTCGafQFxAJ3XzvhVoL7Mw)** and launched as the recommended eval in **[xbench](https://xbench.org/profession/onemillion)**.
+
 **Table of contents**
 
 * [Overview](#overview)
@@ -283,11 +290,13 @@ make clean          # Remove build artifacts
 
 ## Citation
 ```latex
-@article{yang2026onemillionbench,
+@inproceedings{
+    liu2026onemillionbench,
     title={\$OneMillion-Bench: How Far are Language Agents from Human Experts?},
     author={Yang, Qianyu and Liu, Yang and Li, Jiaqi and Bai, Jun and Chen, Hao and Chen, Kaiyuan and Duan, Tiliang and Dong, Jiayun and Hu, Xiaobo and Jia, Zixia and Liu, Yang and Peng, Tao and Ren, Yixin and Tian, Ran and Wang, Zaiyuan and Xiao, Yanglihong and Yao, Gang and Yin, Lingyue and Zhang, Ge and Zhang, Chun and Jiao, Jianpeng and Zheng, Zilong and Gong, Yuan},
-    journal={arXiv preprint arXiv:2603.07980},
-    year={2026}
+    booktitle={The Fortieth Annual Conference on Neural Information Processing Systems Evaluations and Datasets Track},
+    year={2026},
+    url={https://openreview.net/forum?id=2gAr3pMVHH}
 }
 ```
 
