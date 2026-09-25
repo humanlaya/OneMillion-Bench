@@ -19,11 +19,11 @@ A rubric-based automated evaluation system for language agents capabilities on e
 Contact: liuyang@bigai.ai
 
 ## News
-- **[2026.09.26]** $OneMillion-Bench has been accepted by [**NeurIPS 2026**](https://openreview.net/forum?id=2gAr3pMVHH) ✨. See you in 🇫🇷Paris/🇺🇸Atlanta/🇦🇺Sydney!
-- **[2026.08.28]** $OneMillion-Bench has been adopted as one of the official benchmarks by **Tencent [Hy4-preview](https://hy.tencent.ai/research/hy4-preview)**.
-- **[2026.08.03]** $OneMillion-Bench has been adopted as one of the official benchmarks by **Alibaba [Qwen3.8-Max](https://qwen.ai/blog?id=qwen3.8)**.
-- **[2026.06.23]** $OneMillion-Bench has been adopted as one of the official benchmarks by **ByteDance [Doubao-Seed-2.1](https://seed.bytedance.com/en/blog/seed2-1-officially-released-advancing-ai-productivity)**.
-- **[2026.03.10]** $OneMillion-Bench has been wide reported by **[机器之心](https://mp.weixin.qq.com/s/eTCGafQFxAJ3XzvhVoL7Mw)** and launched as the recommended eval in **[xbench](https://xbench.org/profession/onemillion)**.
+- **[2026.09.26]** $OMB has been accepted by [**NeurIPS 2026**](https://openreview.net/forum?id=2gAr3pMVHH) ✨. See you in 🇫🇷Paris/🇺🇸Atlanta/🇦🇺Sydney!
+- **[2026.08.28]** $OMB has been adopted by **Tencent [Hy4-preview](https://hy.tencent.ai/research/hy4-preview)**.
+- **[2026.08.03]** $OMB has been adopted by **Alibaba [Qwen3.8-Max](https://qwen.ai/blog?id=qwen3.8)**.
+- **[2026.06.23]** $OMB has been adopted by **ByteDance [Doubao-Seed-2.1](https://seed.bytedance.com/en/blog/seed2-1-officially-released-advancing-ai-productivity)**.
+- **[2026.03.10]** $OMB has been wide reported by **[机器之心](https://mp.weixin.qq.com/s/eTCGafQFxAJ3XzvhVoL7Mw)** and launched in **[xbench](https://xbench.org/profession/onemillion)**.
 
 **Table of contents**
 
