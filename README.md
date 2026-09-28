@@ -31,6 +31,7 @@ Contact: liuyang@bigai.ai
 * [Dataset](#dataset)
 * [Installation](#installation)
 * [Quick start](#quick-start)
+* [Using EvalScope](#using-evalscope)
 * [CLI reference](#cli-reference)
 * [Configuration](#configuration)
 * [Task format](#task-format)
@@ -138,6 +139,27 @@ python examples/auto_grading.py --dataset datasets/OneMillion-Bench/healthcare_a
 ```
 
 Results are written to `outputs/result_YYYYMMDD_HHMMSS/`.
+
+## Using EvalScope
+
+[EvalScope](https://github.com/modelscope/evalscope) now supports $OneMillion-Bench, providing a standardized evaluation workflow with OpenAI-compatible model endpoints, saved predictions, scoring, and report generation.
+
+This may be useful for users who want a quick path to evaluate hosted or locally served models.
+
+### Example
+
+```bash
+evalscope eval \
+  --model YOUR_MODEL \
+  --api-url OPENAI_API_COMPAT_URL \
+  --api-key YOUR_API_KEY \
+  --datasets one_million_bench \
+  --limit 10
+```
+
+### Documentation
+
+For detailed setup, configuration, and usage instructions, see the [EvalScope $OneMillion-Bench documentation](https://evalscope.readthedocs.io/en/latest/benchmarks/one_million_bench.html).
 
 ## CLI reference
 
