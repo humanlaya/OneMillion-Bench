@@ -19,6 +19,7 @@ A rubric-based automated evaluation system for language agents capabilities on e
 Contact: liuyang@bigai.ai
 
 ## News
+- **[2026.09.28]** $OMB are now available to evaluate with [**EvalScope**](https://evalscope.readthedocs.io/en/latest/benchmarks/one_million_bench.html).
 - **[2026.09.26]** $OMB has been accepted by [**NeurIPS 2026**](https://openreview.net/forum?id=2gAr3pMVHH) ✨. See you in 🇫🇷Paris/🇺🇸Atlanta/🇦🇺Sydney!
 - **[2026.08.28]** $OMB has been adopted by **Tencent [Hy4-preview](https://hy.tencent.ai/research/hy4-preview)**.
 - **[2026.08.03]** $OMB has been adopted by **Alibaba [Qwen3.8-Max](https://qwen.ai/blog?id=qwen3.8)**.
