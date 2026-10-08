@@ -24,7 +24,7 @@ Contact: liuyang@bigai.ai
 - **[2026.08.28]** $OMB has been adopted by **Tencent [Hy4-preview](https://hy.tencent.ai/research/hy4-preview)**.
 - **[2026.08.03]** $OMB has been adopted by **Alibaba [Qwen3.8-Max](https://qwen.ai/blog?id=qwen3.8)**.
 - **[2026.06.23]** $OMB has been adopted by **ByteDance [Doubao-Seed-2.1](https://seed.bytedance.com/en/blog/seed2-1-officially-released-advancing-ai-productivity)**.
-- **[2026.03.10]** $OMB has been wide reported by **[机器之心](https://mp.weixin.qq.com/s/eTCGafQFxAJ3XzvhVoL7Mw)** and launched in **[xbench](https://xbench.org/profession/onemillion)**.
+- **[2026.03.10]** $OMB has been widely reported by **[机器之心](https://mp.weixin.qq.com/s/eTCGafQFxAJ3XzvhVoL7Mw)** and launched in **[xbench](https://xbench.org/profession/onemillion)**.
 
 **Table of contents**
 
