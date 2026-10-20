@@ -219,7 +219,7 @@ Results are saved to `outputs/result_YYYYMMDD_HHMMSS/`:
 @inproceedings{
     liu2026onemillionbench,
     title={\$OneMillion-Bench: How Far are Language Agents from Human Experts?},
-    author={Yang, Qianyu and Liu, Yang and Li, Jiaqi and Bai, Jun and Chen, Hao and Chen, Kaiyuan and Duan, Tiliang and Dong, Jiayun and Hu, Xiaobo and Jia, Zixia and Liu, Yang and Peng, Tao and Ren, Yixin and Tian, Ran and Wang, Zaiyuan and Xiao, Yanglihong and Yao, Gang and Yin, Lingyue and Zhang, Ge and Zhang, Chun and Jiao, Jianpeng and Zheng, Zilong and Gong, Yuan},
+    author={Liu, Yang and Li, Jiaqi and Bai, Jun and Yang, Qianyu and Hu, Xiaobo and Peng, Tao and Wang, Zaiyuan and Dong, Jiayun and Zhang, Chun and Jia, Zixia and Chen, Kaiyuan and Xiao, Yanglihong and Yin, Lingyue and Duan, Tiliang and Zhang, Ge and Yao, Gang and Chen, Hao and Jiao, Jianpeng and Zheng, Zilong},
     booktitle={The Fortieth Annual Conference on Neural Information Processing Systems Evaluations and Datasets Track},
     year={2026},
     url={https://openreview.net/forum?id=2gAr3pMVHH}
