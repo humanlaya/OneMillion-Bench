@@ -10,7 +10,7 @@
 
 > As AI learns to gather the scattered sixpence, human gains the liberty to look up at the moon.
 
-<img alt="npr-poster" src="assets/omb.png">
+<img alt="omb-poster" src="assets/omb.png">
 
 </div>
 
@@ -20,7 +20,7 @@ Contact: liuyang@bigai.ai
 
 ## News
 - **[2026.09.28]** $OMB are now available to evaluate with [**EvalScope**](https://evalscope.readthedocs.io/en/latest/benchmarks/one_million_bench.html).
-- **[2026.09.26]** $OMB has been accepted by [**NeurIPS 2026**](https://openreview.net/forum?id=2gAr3pMVHH) ✨. See you in 🇫🇷Paris/🇺🇸Atlanta/🇦🇺Sydney!
+- **[2026.09.26]** $OMB has been accepted by [**NeurIPS 2026**](https://openreview.net/forum?id=2gAr3pMVHH) ✨. See you in 🇺🇸 Atlanta!
 - **[2026.08.28]** $OMB has been adopted by **Tencent [Hy4-preview](https://hy.tencent.ai/research/hy4-preview)**.
 - **[2026.08.03]** $OMB has been adopted by **Alibaba [Qwen3.8-Max](https://qwen.ai/blog?id=qwen3.8)**.
 - **[2026.06.23]** $OMB has been adopted by **ByteDance [Doubao-Seed-2.1](https://seed.bytedance.com/en/blog/seed2-1-officially-released-advancing-ai-productivity)**.
@@ -33,12 +33,8 @@ Contact: liuyang@bigai.ai
 * [Installation](#installation)
 * [Quick start](#quick-start)
 * [Using EvalScope](#using-evalscope)
-* [CLI reference](#cli-reference)
-* [Configuration](#configuration)
 * [Task format](#task-format)
 * [Output format](#output-format)
-* [Architecture](#architecture)
-* [Development](#development)
 * [Frequently asked questions](#frequently-asked-questions)
 * [License](#license)
 * [Citation](#citation)
@@ -162,70 +158,6 @@ evalscope eval \
 
 For detailed setup, configuration, and usage instructions, see the [EvalScope $OneMillion-Bench documentation](https://evalscope.readthedocs.io/en/latest/benchmarks/one_million_bench.html).
 
-## CLI reference
-
-```bash
-omb eval [OPTIONS]
-```
-
-| Flag | Description |
-| ---- | ----------- |
-| `--dataset PATH` | Path to test file or directory (required) |
-| `--config` / `-c FILE` | YAML configuration file |
-| `--recursive` | Scan subdirectories recursively |
-| `--grade-only` | Grade existing responses only, skip generation |
-| `--overwrite` | Force regeneration and regrading |
-| `--enable-search` | Enable web search augmentation |
-| `--limit N` | Limit number of test questions |
-| `--repeat-sample N` | Independent responses per generator (default: 1) |
-| `--repeat-judge N` | Repeated judge runs per response (default: 1) |
-| `--detect-metadata` | Auto-detect model context length and max tokens |
-| `--verbose` / `-v` | Verbose output |
-| `--quiet` / `-q` | Suppress non-essential output |
-| `--debug` | Show questions and responses |
-| `--no-color` | Disable colored output |
-
-**Exit codes:** 0 = success, 2 = config error, 3 = input error, 4 = partial failure, 130 = interrupted.
-
-## Configuration
-
-Managed via YAML files. Copy `src/omb/config/default.yaml` and modify as needed. API keys are read from environment variables, not config files.
-
-### API keys
-
-| Environment variable | Provider |
-| --------- | -------- |
-| `OPENROUTER_API_KEY` | OpenRouter (50+ models) |
-| `DASHSCOPE_API_KEY` | Qwen / DashScope |
-| `VOLC_API_KEY` | VolcEngine (Doubao) |
-| `HUNYUAN_API_KEY` | Tencent Hunyuan |
-| `LING_API_KEY` | Ling-1T |
-| `LITELLM_API_KEY` | LiteLLM |
-
-### Model selection
-
-| Parameter | Description |
-| --------- | ----------- |
-| `JUDGE_MODELS` | Models used for grading |
-| `GENERATOR_MODELS` | Models to evaluate |
-| `REFERENCE_MODELS` | Optional baseline models with existing responses |
-| `REASONING_EFFORT` | Judge reasoning: `"low"`, `"medium"`, `"high"`, `"xhigh"`, or `null` |
-
-### Parameters
-
-| Parameter | Default | Description |
-| --------- | ------- | ----------- |
-| `MAX_TOKENS` | 128,000 | Max output tokens |
-| `TIMEOUT` | 600 | API timeout (seconds) |
-| `RETRY_TIMES` | 8 | Retry attempts |
-| `SAMPLE_K` | 1 | Response samples per generator |
-| `REPEATED_JUDGE` | 1 | Judge runs per response |
-| `MAX_GENERATION_CONCURRENCY` | 128 | Parallel generation requests |
-| `MAX_GRADING_CONCURRENCY` | 128 | Parallel grading requests |
-| `TEMPERATURE` | 1.0 | Sampling temperature |
-| `TOP_P` | 0.95 | Nucleus sampling threshold |
-| `TOP_K` | 20 | Top-k sampling |
-
 ## Task format
 
 Each test case is a JSON file:
@@ -269,35 +201,6 @@ Results are saved to `outputs/result_YYYYMMDD_HHMMSS/`:
 - **Updated JSON files** — input files augmented with `model_response`, `rubric_auto_score`, `judge_cot`, and `rubric_auto_vs_human` fields.
 - **grading_results.xlsx** — Gruvbox-themed workbook with per-judge scores, aggregate sheets, and cost breakdowns.
 - **grading_results.json** — Machine-readable summary with per-model metrics and costs.
-
-## Architecture
-
-```
-src/omb/
-├── cli/               # CLI entry point (omb eval ...)
-├── orchestrator.py    # Main workflow: load -> generate -> grade -> retry -> report
-├── clients/           # LLM API clients (OpenRouter, Qwen, VolcEngine, Hunyuan, Ling-1T)
-├── config/            # YAML configuration management with pricing data
-├── grading/           # Grading prompt construction and response parsing
-├── processing/        # Async generation and grading with semaphore concurrency
-├── reporting/         # Excel (Gruvbox-themed) and JSON report generation
-├── tracking/          # Token usage and cost tracking per model
-└── utils/             # Rich console UI and Gruvbox color palette
-```
-
-See [docs/arch.md](docs/arch.md) for detailed architecture documentation.
-
-## Development
-
-```bash
-make install        # Install dev dependencies
-make test           # Run tests (pytest)
-make lint           # Static analysis (flake8, mypy, pylint)
-make format         # Format code (black, isort)
-make format-check   # Check formatting without modifying
-make check          # Run all checks
-make clean          # Remove build artifacts
-```
 
 ## Frequently asked questions
 
